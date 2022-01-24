@@ -1,0 +1,74 @@
+body {
+  background-color: rgb(229, 246, 251);
+}
+
+.btn {
+  padding: 5px 20px;
+  border-radius: 4px;
+  margin: 5px;
+  cursor: pointer;
+  border: 1px solid darkblue;
+}
+
+input {
+  margin-right: 10px;
+}
+
+ul {
+  padding: 0;
+  margin: 0;
+}
+
+li {
+  list-style: none;
+}
+
+.car-header {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+}
+
+.select-btns {
+  margin-right: 20px;
+}
+
+.car-controls {
+  margin-right: 20px;
+}
+
+.car-name {
+  font-size: 26px;
+}
+
+.car {
+  width: 50px;
+  position: absolute;
+  left: 0;
+  bottom: -12px;
+}
+
+.car-row {
+  display: flex;
+  flex-direction: row;
+  width: 100%;
+  align-items: center;
+  border-bottom: 2px dashed black;
+}
+
+.flag {
+  position: absolute;
+  width: 50px;
+  height: 50px;
+  background: url('./assets/flags.svg') no-repeat 0 0;
+  right: 40px;
+  bottom: -5px;
+}
+
+
+.road {
+  position: relative;
+  height: 50px;
+  flex-grow: 1;
+  margin-right: 100px;
+}
