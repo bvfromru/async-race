@@ -1,11 +1,11 @@
-import { render, storageInit } from "./app";
+import { PageButtonsUpdate, render, garageUpdate, addListeners } from "./app";
 import { storage } from "./storage";
 
 async function init() {
-  const carInfo = await storageInit();
-  storage.cars = carInfo.items;
-  storage.carsCount = carInfo.count;
+  await garageUpdate()
   await render();
+  PageButtonsUpdate();
+  addListeners();
 }
 
 init();

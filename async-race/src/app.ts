@@ -3,8 +3,25 @@ import { getCars } from "./api";
 import { constants } from "./constants";
 import { storage } from "./storage";
 
-export async function storageInit(): Promise<{ items: ICar[]; count: number }> {
-  return await getCars(constants.defaultGaragePage);
+export async function garageUpdate(): Promise<void> {
+  const carInfo = await getCars(storage.garagePage);
+  storage.cars = carInfo.items;
+  storage.carsCount = carInfo.count;
+}
+
+export function PageButtonsUpdate(): void {
+  const prevButton = document.getElementById("prev") as HTMLButtonElement;
+  const nextButton = document.getElementById("next") as HTMLButtonElement;
+  if (storage.garagePage * constants.garagePagesLimit < storage.carsCount) {
+    nextButton.disabled = false;
+  } else {
+    nextButton.disabled = true;
+  }
+  if (storage.garagePage > 1) {
+    prevButton.disabled = false;
+  } else {
+    prevButton.disabled = true;
+  }
 }
 
 export const render = async (): Promise<void> => {
@@ -34,7 +51,7 @@ export const render = async (): Promise<void> => {
         <button class="btn reset-btn primary" id="reset">Reset</button>
         <button class="btn generator-btn" id="generator">Generate cars</button>
       </div>
-      <div id="garage">
+      <div id="garage-cars">
         ${renderGarage()}
       </div>
     </main>
@@ -90,3 +107,25 @@ const renderGarageRow = ({ id, name, color }: ICar) => `
     </div>
   </div>
 `;
+
+export const addListeners = function (): void {
+  document.body.addEventListener("click", async (event) => {
+    const garageCars = document.getElementById("garage-cars") as HTMLElement;
+    if ((<HTMLButtonElement>event.target).classList.contains("prev-btn")) {
+      if (storage.view === "garage") {
+        storage.garagePage -= 1;
+        await garageUpdate();
+        PageButtonsUpdate();
+        garageCars.innerHTML = renderGarage();
+      }
+    }
+    if ((<HTMLButtonElement>event.target).classList.contains("next-btn")) {
+      if (storage.view === "garage") {
+        storage.garagePage += 1;
+        await garageUpdate();
+        PageButtonsUpdate();
+        garageCars.innerHTML = renderGarage();
+      }
+    }
+  });
+};

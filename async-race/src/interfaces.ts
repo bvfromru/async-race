@@ -9,4 +9,5 @@ export interface IStorage {
   winnersPage: number;
   cars: ICar[];
   carsCount: number;
+  view: string;
 }
