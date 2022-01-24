@@ -83,8 +83,8 @@ export const render = async (): Promise<void> => {
       ${renderWinners()}
     </main>
     <nav class="pagination">
-      <button class="btn primary prev-btn" disabled id="prev">Prev</button>
-      <button class="btn primary next-btn" disabled id="next">Next</button>
+      <button class="btn primary prev-btn" disabled id="prev">Previous page</button>
+      <button class="btn primary next-btn" disabled id="next">Next page</button>
     </nav>
   `;
   const root = document.createElement("div");

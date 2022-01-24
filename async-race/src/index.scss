@@ -5,7 +5,7 @@ body {
 .btn {
   padding: 5px 20px;
   border-radius: 4px;
-  margin: 5px;
+  margin: 2px 5px;
   cursor: pointer;
   border: 1px solid darkblue;
 }
@@ -25,6 +25,10 @@ ul {
 
 li {
   list-style: none;
+}
+
+.race-controls {
+  margin-top: 10px;
 }
 
 .car-header {
@@ -65,15 +69,32 @@ li {
   position: absolute;
   width: 50px;
   height: 50px;
-  background: url('./assets/flags.svg') no-repeat 0 0;
+  background: url("./assets/flags.svg") no-repeat 0 0;
   right: 40px;
   bottom: -5px;
 }
-
 
 .road {
   position: relative;
   height: 50px;
   flex-grow: 1;
   margin-right: 100px;
+}
+
+.table {
+  font-size: 24px;
+  margin-bottom: 20px;
+  // padding: 20px;
+}
+
+
+.table svg {
+  width: 40px;
+}
+
+.table th,
+.table td {
+  background-color: rgb(171, 199, 231);
+  text-align: left;
+  padding: 4px 20px;
 }
