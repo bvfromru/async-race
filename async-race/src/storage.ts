@@ -6,6 +6,10 @@ export const storage: IStorage = {
   garagePage: constants.defaultGaragePage,
   winnersPage: constants.defaultWinnersPage,
   cars: [],
+  winners: [],
   carsCount: 0,
+  winnersCount: 0,
   view: "garage",
+  sort: '',
+  sortOrder: '',
 };

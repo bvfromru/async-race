@@ -1,5 +1,5 @@
 import { ICar } from "./interfaces";
-import { getCars } from "./api";
+import { getCars, getWinners } from "./api";
 import { constants } from "./constants";
 import { storage } from "./storage";
 
@@ -9,31 +9,55 @@ export async function garageUpdate(): Promise<void> {
   storage.carsCount = carInfo.count;
 }
 
+export async function winnersUpdate(): Promise<void> {
+  const winnersInfo = await getWinners({
+    page: storage.winnersPage,
+    limit: constants.winnersPagesLimit,
+    sort: storage.sort,
+    order: storage.sortOrder,
+  });
+  storage.winners = winnersInfo.items;
+  storage.winnersCount = winnersInfo.count;
+}
+
 export function PageButtonsUpdate(): void {
   const prevButton = document.getElementById("prev") as HTMLButtonElement;
   const nextButton = document.getElementById("next") as HTMLButtonElement;
-  if (storage.garagePage * constants.garagePagesLimit < storage.carsCount) {
-    nextButton.disabled = false;
-  } else {
-    nextButton.disabled = true;
-  }
-  if (storage.garagePage > 1) {
-    prevButton.disabled = false;
-  } else {
-    prevButton.disabled = true;
+  if (storage.view === "garage") {
+    if (storage.garagePage * constants.garagePagesLimit < storage.carsCount) {
+      nextButton.disabled = false;
+    } else {
+      nextButton.disabled = true;
+    }
+    if (storage.garagePage > 1) {
+      prevButton.disabled = false;
+    } else {
+      prevButton.disabled = true;
+    }
+  } else if (storage.view === "winners") {
+    if (storage.winnersPage * constants.winnersPagesLimit < storage.winnersCount) {
+      nextButton.disabled = false;
+    } else {
+      nextButton.disabled = true;
+    }
+    if (storage.winnersPage > 1) {
+      prevButton.disabled = false;
+    } else {
+      prevButton.disabled = true;
+    }
   }
 }
 
 export const render = async (): Promise<void> => {
   const template = `
     <nav class="menu">
-      <button class="btn garage-menu-btn primary" id="garage-menu">To garage</button>
-      <button class="btn winners-menu-btn primary" id="winners-menu">To winners</button>
+      <button class="btn garage-menu-btn" id="garage-menu" disabled>To garage</button>
+      <button class="btn winners-menu-btn" id="winners-menu">To winners</button>
     </nav>
-    <div>
+    <main id="garage-view">
+      <div>
         <p class="winner-message" id="message">Number one wins</p>
       </div>
-    <main id="garage-view">
       <div>
         <form class="form" id="create">
           <input class="input" id="create-name" name="name" type="text">
@@ -56,6 +80,7 @@ export const render = async (): Promise<void> => {
       </div>
     </main>
     <main id="winners-view" style="display: none">
+      ${renderWinners()}
     </main>
     <nav class="pagination">
       <button class="btn primary prev-btn" disabled id="prev">Prev</button>
@@ -69,10 +94,39 @@ export const render = async (): Promise<void> => {
 
 const renderGarage = () => `
   <h1>Garage (total number of cars: ${storage.carsCount})</h1>
-  <h2>Page #${storage.garagePage}</h2>
+  <h2>Page: ${storage.garagePage} / ${Math.ceil(storage.carsCount / constants.garagePagesLimit)}</h2>
   <ul class="garage">
   ${storage.cars.map((car) => `<li>${renderGarageRow(car)}</li>`).join("")}
   </ul>
+`;
+
+const renderWinners = () => `
+  <h1>Winners (total number of winners: ${storage.winnersCount})</h1>
+  <h2>Page: ${storage.winnersPage} / ${Math.ceil(storage.winnersCount / constants.winnersPagesLimit)}</h2>
+  <table class="table" cellspasing="0" border="0" cellpadding="0">
+    <thead>
+      <th>Number</th>
+      <th>Car</th>
+      <th>Name</th>
+      <th class="table-btn table-wins" id="sort-by-wins">Wins</th>
+      <th class="table-btn table-time" id="sort-by-time">Best time (seconds)</th>
+    </thead>
+    <tbody>
+      ${storage.winners
+        .map(
+          (winner, index) => `
+      <tr>
+        <td>${index + 1}</td>
+        <td>${renderCar(winner.car.color)}</td>
+        <td>${winner.car.name}</td>
+        <td>${winner.wins}</td>
+        <td>${winner.time}</td>
+      </tr>
+    `
+        )
+        .join("")}
+    </tbody>
+  </table>
 `;
 
 const renderCar = (color: string) => `
@@ -110,22 +164,57 @@ const renderGarageRow = ({ id, name, color }: ICar) => `
 
 export const addListeners = function (): void {
   document.body.addEventListener("click", async (event) => {
+    const eventTarget = event.target as HTMLButtonElement;
     const garageCars = document.getElementById("garage-cars") as HTMLElement;
-    if ((<HTMLButtonElement>event.target).classList.contains("prev-btn")) {
+    const winnersView = document.getElementById("winners-view") as HTMLElement;
+    const garageView = document.getElementById("garage-view") as HTMLElement;
+    const garageViewBtn = document.querySelector(".garage-menu-btn") as HTMLButtonElement;
+    const winnersViewBtn = document.querySelector(".winners-menu-btn") as HTMLButtonElement;
+
+    if (eventTarget.classList.contains("prev-btn")) {
       if (storage.view === "garage") {
         storage.garagePage -= 1;
         await garageUpdate();
         PageButtonsUpdate();
         garageCars.innerHTML = renderGarage();
+      } else {
+        storage.winnersPage -= 1;
+        await winnersUpdate();
+        PageButtonsUpdate();
+        winnersView.innerHTML = renderWinners();
       }
     }
-    if ((<HTMLButtonElement>event.target).classList.contains("next-btn")) {
+    if (eventTarget.classList.contains("next-btn")) {
       if (storage.view === "garage") {
         storage.garagePage += 1;
         await garageUpdate();
         PageButtonsUpdate();
         garageCars.innerHTML = renderGarage();
+      } else {
+        storage.winnersPage += 1;
+        await winnersUpdate();
+        PageButtonsUpdate();
+        winnersView.innerHTML = renderWinners();
       }
+    }
+
+    if (eventTarget.classList.contains("garage-menu-btn")) {
+      winnersView.style.display = "none";
+      garageView.style.display = "block";
+      garageViewBtn.disabled = true;
+      winnersViewBtn.disabled = false;
+      storage.view = "garage";
+      PageButtonsUpdate();
+    }
+    if (eventTarget.classList.contains("winners-menu-btn")) {
+      winnersView.style.display = "block";
+      garageView.style.display = "none";
+      garageViewBtn.disabled = false;
+      winnersViewBtn.disabled = true;
+      await winnersUpdate();
+      winnersView.innerHTML = renderWinners();
+      storage.view = "winners";
+      PageButtonsUpdate();
     }
   });
 };
