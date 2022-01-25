@@ -31,3 +31,14 @@ export interface IWinner {
   time: number;
   car: ICar;
 }
+
+export interface IStartDriving {
+  success: boolean;
+  id: number;
+  time: number;
+}
+
+export interface ICarSpeed {
+  velocity: number;
+  distance: number;
+}

@@ -1,4 +1,4 @@
-import { ICar, ICarCreate, IWinner } from "./interfaces";
+import { ICar, ICarCreate, ICarSpeed, IWinner } from "./interfaces";
 import { path, constants } from "./constants";
 
 export const getCars = async (
@@ -71,4 +71,15 @@ export const deleteCar = async (id: number): Promise<void> => {
 
 export const deleteWinner = async (id: number): Promise<void> => {
   return (await fetch(`${path.winners}/${id}`, { method: "DELETE" })).json();
+};
+
+export const startEngine = async (id: number): Promise<ICarSpeed> =>
+  (await fetch(`${path.engine}?id=${id}&status=started`, { method: "PATCH" })).json();
+
+export const stopEngine = async (id: number): Promise<ICarSpeed> =>
+  (await fetch(`${path.engine}?id=${id}&status=stopped`, { method: "PATCH" })).json();
+
+export const drive = async (id: number): Promise<{ success: boolean }> => {
+  const res = await fetch(`${path.engine}?id=${id}&status=drive`, { method: "PATCH" }).catch();
+  return res.status !== 200 ? { success: false } : { ...(await res.json()) };
 };

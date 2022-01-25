@@ -1,5 +1,16 @@
-import { ICar, ICarCreate } from "./interfaces";
-import { getCars, getCar, getWinners, createCar, deleteCar, deleteWinner, updateCar } from "./api";
+import { ICar, ICarCreate, IStartDriving } from "./interfaces";
+import {
+  getCars,
+  getCar,
+  getWinners,
+  createCar,
+  deleteCar,
+  deleteWinner,
+  updateCar,
+  startEngine,
+  stopEngine,
+  drive,
+} from "./api";
 import { constants } from "./constants";
 import { storage } from "./storage";
 import { carBrands, carModels } from "./carData";
@@ -255,8 +266,16 @@ export const addListeners = function (): void {
       updateColorInput.disabled = false;
       updateBtn.disabled = false;
     }
-  });
 
+    if (eventTarget.classList.contains("start-engine-btn")) {
+      const id = +eventTarget.id.split("start-engine-car-")[1];
+      startDriving(id);
+    }
+    if (eventTarget.classList.contains("stop-engine-btn")) {
+      const id = +eventTarget.id.split("stop-engine-car-")[1];
+      stopDriving(id);
+    }
+  });
 
   createForm.addEventListener("submit", async (event) => {
     event.preventDefault();
@@ -320,4 +339,35 @@ function disableButtons(operator: boolean): void {
   } else {
     btns.forEach((btn) => (btn.disabled = false));
   }
+}
+
+async function startDriving(id: number): Promise<IStartDriving> {
+  const startButton = document.getElementById(`start-engine-car-${id}`) as HTMLButtonElement;
+  const stopButton = document.getElementById(`stop-engine-car-${id}`) as HTMLButtonElement;
+  startButton.disabled = true;
+  startButton.classList.toggle("enabling", true);
+  const { velocity, distance } = await startEngine(id);
+  const time = Math.round(distance / velocity);
+  startButton.classList.toggle("enabling", false);
+  stopButton.disabled = false;
+  const car = document.getElementById(`car-${id}`) as HTMLElement;
+  car.style.animationName = `car-animation`;
+  car.style.animationDuration = `${time.toString()}ms`;
+  const { success } = await drive(id);
+  if (!success) {
+    car.style.animationPlayState = "paused";
+  }
+  return { success, id, time };
+}
+
+async function stopDriving(id: number): Promise<void> {
+  const startButton = document.getElementById(`start-engine-car-${id}`) as HTMLButtonElement;
+  const stopButton = document.getElementById(`stop-engine-car-${id}`) as HTMLButtonElement;
+  stopButton.disabled = true;
+  stopButton.classList.toggle("enabling", true);
+  await stopEngine(id);
+  stopButton.classList.toggle("enabling", false);
+  startButton.disabled = false;
+  const car = document.getElementById(`car-${id}`) as HTMLElement;
+  car.style.animationName = "none";
 }

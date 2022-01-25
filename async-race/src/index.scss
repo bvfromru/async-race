@@ -1,3 +1,12 @@
+@keyframes car-animation {
+  from {
+    left: 0%;
+  }
+  to {
+    left: 100%;
+  }
+}
+
 body {
   background-color: rgb(229, 246, 251);
 }
@@ -12,6 +21,10 @@ body {
 
 .btn:disabled {
   cursor: initial;
+}
+
+.btn.enabling {
+  border-color: red;
 }
 
 input {
@@ -54,6 +67,8 @@ li {
   position: absolute;
   left: 0;
   bottom: -12px;
+  animation-timing-function: linear;
+  animation-fill-mode: forwards;
 }
 
 .car-row {
@@ -70,7 +85,7 @@ li {
   width: 50px;
   height: 50px;
   background: url("./assets/flags.svg") no-repeat 0 0;
-  right: 40px;
+  right: 5px;
   bottom: -5px;
 }
 
@@ -86,7 +101,6 @@ li {
   margin-bottom: 20px;
   // padding: 20px;
 }
-
 
 .table svg {
   width: 40px;
