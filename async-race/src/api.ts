@@ -16,6 +16,17 @@ export const getCar = async (id: number): Promise<ICar> => {
   return (await fetch(`${path.garage}/${id}`)).json();
 };
 
+export const updateCar = async (id: number, body: ICarCreate): Promise<void> =>
+  (
+    await fetch(`${path.garage}/${id}`, {
+      method: "PUT",
+      body: JSON.stringify(body),
+      headers: {
+        "Content-Type": "application/json",
+      },
+    })
+  ).json();
+
 const getSortOrder = (sort: string, order: string): string => {
   if (sort && order) {
     return `&_sort=${sort}&_order=${order}`;
