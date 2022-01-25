@@ -77,7 +77,7 @@ li {
   width: 100%;
   align-items: center;
   border-bottom: 2px dashed black;
-  margin-bottom: 20px;
+  margin-bottom: 14px;
 }
 
 .flag {
@@ -111,4 +111,27 @@ li {
   background-color: rgb(171, 199, 231);
   text-align: left;
   padding: 4px 20px;
+}
+
+.winner-message {
+  display: none;
+  position: absolute;
+  left: 50%;
+  top: 5%;
+  font-size: 40px;
+  transform: translateX(-50%);
+  font-weight: bold;
+  background-color: rgba(229, 246, 251, 0.5);
+  border: 1px solid darkblue;
+  padding: 30px;
+  border-radius: 10px;
+  pointer-events: none;
+}
+
+.winner-message.visible {
+  display: block;
+}
+
+.menu {
+  margin-bottom: 10px;
 }

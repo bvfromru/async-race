@@ -1,4 +1,4 @@
-import { ICar, ICarCreate, ICarSpeed, IWinner } from "./interfaces";
+import { ICar, ICarCreate, ICarSpeed, IRace, IWinner } from "./interfaces";
 import { path, constants } from "./constants";
 
 export const getCars = async (
@@ -83,3 +83,62 @@ export const drive = async (id: number): Promise<{ success: boolean }> => {
   const res = await fetch(`${path.engine}?id=${id}&status=drive`, { method: "PATCH" }).catch();
   return res.status !== 200 ? { success: false } : { ...(await res.json()) };
 };
+
+export const createWinner = async (body: { id: number | undefined; wins: number; time: number }): Promise<void> =>
+  (
+    await fetch(path.winners, {
+      method: "POST",
+      body: JSON.stringify(body),
+      headers: {
+        "Content-Type": "application/json",
+      },
+    })
+  ).json();
+
+export const updateWinner = async (
+  id: number | undefined,
+  body: {
+    id: number | undefined;
+    wins: number;
+    time: number;
+  }
+): Promise<void> =>
+  (
+    await fetch(`${path.winners}/${id}`, {
+      method: "PUT",
+      body: JSON.stringify(body),
+      headers: {
+        "Content-Type": "application/json",
+      },
+    })
+  ).json();
+
+export const saveWinner = async ({ name, color, id, time }: IRace): Promise<void> => {
+  const winnerStatus = await getWinnerStatus(id);
+
+  if (winnerStatus === 404) {
+    await createWinner({
+      id,
+      wins: 1,
+      time,
+    });
+  } else {
+    const winner = await getWinner(id);
+    await updateWinner(id, {
+      id,
+      wins: winner.wins + 1,
+      time: time < winner.time ? time : winner.time,
+    });
+  }
+};
+
+export const getWinner = async (
+  id: number | undefined
+): Promise<{
+  id: number;
+  wins: number;
+  time: number;
+}> => (await fetch(`${path.winners}/${id}`)).json();
+
+export const getWinnerStatus = async (id: number | undefined): Promise<number> =>
+  (await fetch(`${path.winners}/${id}`)).status;

@@ -1,4 +1,4 @@
-import { ICar, ICarCreate, IStartDriving } from "./interfaces";
+import { ICar, ICarCreate, IRace, IStartDriving } from "./interfaces";
 import {
   getCars,
   getCar,
@@ -10,6 +10,7 @@ import {
   startEngine,
   stopEngine,
   drive,
+  saveWinner,
 } from "./api";
 import { constants } from "./constants";
 import { storage } from "./storage";
@@ -69,12 +70,11 @@ export function PageButtonsUpdate(): void {
 export const render = async (): Promise<void> => {
   const template = `
     <nav class="menu">
-      <button class="btn garage-menu-btn" id="garage-menu" disabled>To garage</button>
-      <button class="btn winners-menu-btn" id="winners-menu">To winners</button>
+      <button class="btn garage-menu-btn primary" id="garage-menu" disabled>To garage</button>
+      <button class="btn winners-menu-btn primary" id="winners-menu">To winners</button>
     </nav>
     <main id="garage-view">
-      <div>
-        <p class="winner-message" id="message">Number one wins</p>
+      <div class="winner-message" id="message">
       </div>
       <div>
         <form class="form" id="create">
@@ -89,8 +89,8 @@ export const render = async (): Promise<void> => {
         </form>
       </div>
       <div class="race-controls">
-        <button class="btn race-btn primary" id="race">Race</button>
-        <button class="btn reset-btn primary" id="reset">Reset</button>
+        <button class="btn race-btn" id="race">Race</button>
+        <button class="btn reset-btn" id="reset">Reset</button>
         <button class="btn generator-btn" id="generator">Generate cars</button>
       </div>
       <div id="garage-cars">
@@ -101,8 +101,8 @@ export const render = async (): Promise<void> => {
       ${renderWinners()}
     </main>
     <nav class="pagination">
-      <button class="btn primary prev-btn" disabled id="prev">Previous page</button>
-      <button class="btn primary next-btn" disabled id="next">Next page</button>
+      <button class="btn prev-btn primary" disabled id="prev">Previous page</button>
+      <button class="btn next-btn primary" disabled id="next">Next page</button>
     </nav>
   `;
   const root = document.createElement("div");
@@ -239,14 +239,14 @@ export const addListeners = function (): void {
     }
 
     if (eventTarget.classList.contains("generator-btn")) {
-      disableButtons(true);
+      eventTarget.disabled = true;
       const cars = generateCars(constants.generateCarsLimit);
       await Promise.all(cars.map(async (car) => createCar(car)));
       await garageUpdate();
       PageButtonsUpdate();
       garageCars.innerHTML = renderGarage();
       disableButtons(false);
-      PageButtonsUpdate();
+      eventTarget.disabled = false;
     }
 
     if (eventTarget.classList.contains("remove-btn")) {
@@ -274,6 +274,25 @@ export const addListeners = function (): void {
     if (eventTarget.classList.contains("stop-engine-btn")) {
       const id = +eventTarget.id.split("stop-engine-car-")[1];
       stopDriving(id);
+    }
+
+    if ((<HTMLButtonElement>event.target).classList.contains("race-btn")) {
+      disableButtons(true);
+      (<HTMLButtonElement>event.target).disabled = true;
+      const winner = await race(startDriving);
+      await saveWinner(winner);
+      const message = document.getElementById("message");
+      (<HTMLElement>message).innerHTML = `And the winner is ${winner.name} with (${winner.time}s)!`;
+      (<HTMLElement>message).classList.toggle("visible", true);
+      (<HTMLButtonElement>document.getElementById("reset")).disabled = false;
+    }
+    if ((<HTMLButtonElement>event.target).classList.contains("reset-btn")) {
+      disableButtons(false);
+      (<HTMLButtonElement>event.target).disabled = true;
+      storage.cars.map(({ id }) => stopDriving(id));
+      const message = document.getElementById("message");
+      message?.classList.toggle("visible", false);
+      (<HTMLButtonElement>document.getElementById("race")).disabled = false;
     }
   });
 
@@ -333,11 +352,11 @@ function generateName(): string {
 }
 
 function disableButtons(operator: boolean): void {
-  const btns = document.querySelectorAll(".btn") as NodeListOf<HTMLButtonElement>;
+  const btns = document.querySelectorAll(".primary") as NodeListOf<HTMLButtonElement>;
   if (operator) {
     btns.forEach((btn) => (btn.disabled = true));
   } else {
-    btns.forEach((btn) => (btn.disabled = false));
+    PageButtonsUpdate();
   }
 }
 
@@ -370,4 +389,24 @@ async function stopDriving(id: number): Promise<void> {
   startButton.disabled = false;
   const car = document.getElementById(`car-${id}`) as HTMLElement;
   car.style.animationName = "none";
+}
+
+async function raceAll(promises: Promise<IStartDriving>[], indexes: number[]): Promise<IRace> {
+  const { success, id, time } = await Promise.race(promises);
+  if (!success) {
+    const indexFailed = indexes.findIndex((i) => i === id);
+    const restOfPromises = [...promises.slice(0, indexFailed), ...promises.slice(indexFailed + 1, promises.length)];
+    const restOfIndexes = [...indexes.slice(0, indexFailed), ...indexes.slice(indexFailed + 1, indexes.length)];
+    return raceAll(restOfPromises, restOfIndexes);
+  }
+  return { ...storage.cars.find((car) => car.id === id), time: +(time / 1000).toFixed(2) };
+}
+
+async function race(action: (id: number) => Promise<IStartDriving>): Promise<IRace> {
+  const promises = storage.cars.map(({ id }) => action(id));
+  const winner = await raceAll(
+    promises,
+    storage.cars.map((car) => car.id)
+  );
+  return winner;
 }

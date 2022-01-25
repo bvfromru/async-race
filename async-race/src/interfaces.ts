@@ -42,3 +42,10 @@ export interface ICarSpeed {
   velocity: number;
   distance: number;
 }
+
+export interface IRace {
+  name?: string;
+  color?: string;
+  id?: number;
+  time: number;
+}
