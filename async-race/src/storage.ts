@@ -10,6 +10,6 @@ export const storage: IStorage = {
   carsCount: 0,
   winnersCount: 0,
   view: "garage",
-  sort: '',
-  sortOrder: '',
+  sort: "time",
+  sortOrder: "asc",
 };

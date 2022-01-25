@@ -17,10 +17,16 @@ body {
   margin: 2px 5px;
   cursor: pointer;
   border: 1px solid darkblue;
+  transition: background-color 0.2s;
 }
 
-.btn:disabled {
+.btn:hover {
+  background-color: lighten(rgb(239, 239, 239), 10);
+}
+
+.btn:disabled:hover {
   cursor: initial;
+  background-color: rgba(239, 239, 239, 0.3);
 }
 
 .btn.enabling {
@@ -69,6 +75,24 @@ li {
   bottom: -12px;
   animation-timing-function: linear;
   animation-fill-mode: forwards;
+}
+
+
+.car::after {
+  content: "";
+  display: none;
+  width: 50px;
+  height: 35px;
+  top: -12%;
+  left: 47%;
+  position: absolute;
+  background: url(./assets/smoke.gif) no-repeat 0 0;
+  background-size: contain;
+  z-index: 1000;
+}
+
+.car.broken::after {
+  display: block;
 }
 
 .car-row {
@@ -135,3 +159,27 @@ li {
 .menu {
   margin-bottom: 10px;
 }
+
+.table-btn {
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.table-btn:hover {
+  background-color: lighten(#abc7e7, 5);
+}
+
+
+// .table-btn::after {
+//   content: "";
+//   display: inline-block;
+//   margin-left: 10px;
+// }
+
+// .table-btn.show.asc::after {
+//   content: "🠗";
+// }
+
+// .table-btn.show.desc::after {
+//   content: "🠕";
+// }

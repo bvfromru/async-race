@@ -134,7 +134,7 @@ const renderWinners = () => `
         .map(
           (winner, index) => `
       <tr>
-        <td>${index + 1}</td>
+        <td>${(storage.winnersPage - 1) * constants.winnersPagesLimit + index + 1}</td>
         <td>${renderCar(winner.car.color)}</td>
         <td>${winner.car.name}</td>
         <td>${winner.wins}</td>
@@ -195,6 +195,8 @@ export const addListeners = function (): void {
     const eventTarget = event.target as HTMLButtonElement;
     const winnersView = document.getElementById("winners-view") as HTMLElement;
     const garageView = document.getElementById("garage-view") as HTMLElement;
+    const resetBtn = document.getElementById("reset") as HTMLButtonElement;
+    const raceBtn = document.getElementById("race") as HTMLButtonElement;
 
     if (eventTarget.classList.contains("prev-btn")) {
       if (storage.view === "garage") {
@@ -250,7 +252,7 @@ export const addListeners = function (): void {
     }
 
     if (eventTarget.classList.contains("remove-btn")) {
-      const id = +(<HTMLButtonElement>event.target).id.split("remove-car-")[1];
+      const id = +eventTarget.id.split("remove-car-")[1];
       await deleteCar(id);
       await deleteWinner(id);
       await garageUpdate();
@@ -276,23 +278,30 @@ export const addListeners = function (): void {
       stopDriving(id);
     }
 
-    if ((<HTMLButtonElement>event.target).classList.contains("race-btn")) {
+    if (eventTarget.classList.contains("race-btn")) {
       disableButtons(true);
-      (<HTMLButtonElement>event.target).disabled = true;
+      eventTarget.disabled = true;
       const winner = await race(startDriving);
       await saveWinner(winner);
-      const message = document.getElementById("message");
-      (<HTMLElement>message).innerHTML = `And the winner is ${winner.name} with (${winner.time}s)!`;
-      (<HTMLElement>message).classList.toggle("visible", true);
-      (<HTMLButtonElement>document.getElementById("reset")).disabled = false;
+      const message = document.getElementById("message") as HTMLElement;
+      message.innerHTML = `And the winner is ${winner.name} with (${winner.time}s)!`;
+      message.classList.toggle("visible", true);
+      resetBtn.disabled = false;
     }
-    if ((<HTMLButtonElement>event.target).classList.contains("reset-btn")) {
+    if (eventTarget.classList.contains("reset-btn")) {
       disableButtons(false);
-      (<HTMLButtonElement>event.target).disabled = true;
+      eventTarget.disabled = true;
       storage.cars.map(({ id }) => stopDriving(id));
       const message = document.getElementById("message");
       message?.classList.toggle("visible", false);
-      (<HTMLButtonElement>document.getElementById("race")).disabled = false;
+      raceBtn.disabled = false;
+    }
+
+    if (eventTarget.classList.contains("table-wins")) {
+      setSortOrder("wins");
+    }
+    if (eventTarget.classList.contains("table-time")) {
+      setSortOrder("time");
     }
   });
 
@@ -375,6 +384,7 @@ async function startDriving(id: number): Promise<IStartDriving> {
   const { success } = await drive(id);
   if (!success) {
     car.style.animationPlayState = "paused";
+    car.classList.add("broken");
   }
   return { success, id, time };
 }
@@ -389,6 +399,8 @@ async function stopDriving(id: number): Promise<void> {
   startButton.disabled = false;
   const car = document.getElementById(`car-${id}`) as HTMLElement;
   car.style.animationName = "none";
+  car.style.animationPlayState = "initial";
+  car.classList.remove("broken");
 }
 
 async function raceAll(promises: Promise<IStartDriving>[], indexes: number[]): Promise<IRace> {
@@ -410,3 +422,27 @@ async function race(action: (id: number) => Promise<IStartDriving>): Promise<IRa
   );
   return winner;
 }
+
+async function setSortOrder(sort: string) {
+  if (storage.sortOrder === "asc") {
+    storage.sortOrder = "desc";
+  } else {
+    storage.sortOrder = "asc";
+  }
+  storage.sort = sort;
+  await winnersUpdate();
+  const winnersView = document.getElementById("winners-view") as HTMLElement;
+  winnersView.innerHTML = renderWinners();
+}
+
+// function updateSortArrow() {
+//   const winnersBtn = document.querySelector(".table-wins") as HTMLButtonElement;
+//   const timeBtn = document.querySelector(".table-time") as HTMLButtonElement;
+//   if (storage.sort === "wins") {
+//     if (storage.sortOrder === "asc") {
+//       winnersBtn.classList.add('show');
+//       winnersBtn.classList.add('asc');
+//       timeBtn.classList.remove('show');
+//     }
+//   }
+// }
