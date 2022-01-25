@@ -53,3 +53,11 @@ export const createCar = async (body: ICarCreate): Promise<ICar> =>
       headers: { "Content-Type": "application/json" },
     })
   ).json();
+
+export const deleteCar = async (id: number): Promise<void> => {
+  return (await fetch(`${path.garage}/${id}`, { method: "DELETE" })).json();
+};
+
+export const deleteWinner = async (id: number): Promise<void> => {
+  return (await fetch(`${path.winners}/${id}`, { method: "DELETE" })).json();
+};

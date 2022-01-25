@@ -1,5 +1,5 @@
 import { ICar, ICarCreate } from "./interfaces";
-import { getCars, getWinners, createCar } from "./api";
+import { getCars, getWinners, createCar, deleteCar, deleteWinner } from "./api";
 import { constants } from "./constants";
 import { storage } from "./storage";
 import { carBrands, carModels } from "./carData";
@@ -68,12 +68,12 @@ export const render = async (): Promise<void> => {
       <div>
         <form class="form" id="create">
           <input class="input" id="create-name" name="name" type="text">
-          <input class="color" id="create-color" name="color" type="color" value="#ffffff">
+          <input class="color" id="create-color" name="color" type="color" value="#6c779f">
           <button class="btn" type="submit">Create</button>
         </form>
         <form class="form" id="update">
           <input class="input" id="update-name" name="name" type="text" disabled>
-          <input class="color" id="update-color" name="color" type="color" value="#ffffff" disabled>
+          <input class="color" id="update-color" name="color" type="color" value="#6c779f" disabled>
           <button class="btn" id="update-submit" type="submit">Update</button>
         </form>
       </div>
@@ -170,13 +170,14 @@ const renderGarageRow = ({ id, name, color }: ICar) => `
 `;
 
 export const addListeners = function (): void {
+  const createBtn = document.getElementById("create") as HTMLButtonElement;
+  const garageCars = document.getElementById("garage-cars") as HTMLElement;
+  const createNameInput = document.getElementById("create-name") as HTMLInputElement;
+  const createColorInput = document.getElementById("create-color") as HTMLInputElement;
   document.body.addEventListener("click", async (event) => {
     const eventTarget = event.target as HTMLButtonElement;
-    const garageCars = document.getElementById("garage-cars") as HTMLElement;
     const winnersView = document.getElementById("winners-view") as HTMLElement;
     const garageView = document.getElementById("garage-view") as HTMLElement;
-    
-    const generatorBtn = document.getElementById("generator") as HTMLButtonElement;
 
     if (eventTarget.classList.contains("prev-btn")) {
       if (storage.view === "garage") {
@@ -230,11 +231,45 @@ export const addListeners = function (): void {
       disableButtons(false);
       PageButtonsUpdate();
     }
+
+    if (eventTarget.classList.contains("remove-btn")) {
+      const id = +(<HTMLButtonElement>event.target).id.split("remove-car-")[1];
+      await deleteCar(id);
+      await deleteWinner(id);
+      await garageUpdate();
+      garageCars.innerHTML = renderGarage();
+      PageButtonsUpdate();
+    }
+  });
+
+  createNameInput.addEventListener('input', (event) => {
+    if (createNameInput.value) {
+      createBtn.disabled = false;
+    } else {
+      createBtn.disabled = true;
+    }
+  })
+
+  createBtn.addEventListener("submit", async (event) => {
+    event.preventDefault();
+    if (createNameInput.value) {
+      const newCar = {
+        name: createNameInput.value,
+        color: createColorInput.value,
+      };
+      await createCar(newCar);
+      await garageUpdate();
+      garageCars.innerHTML = renderGarage();
+      createNameInput.value = "";
+      createColorInput.value = "#6c779f";
+    } else {
+      alert("Please enter the car name!");
+    }
   });
 };
 
 function generateCars(count: number): ICarCreate[] {
-  console.log('generate');
+  console.log("generate");
   return new Array(count).fill(0).map((el) => ({ name: generateName(), color: generateColor() }));
 }
 
@@ -249,10 +284,10 @@ function generateName(): string {
 }
 
 function disableButtons(operator: boolean): void {
-  const btns = document.querySelectorAll('.btn') as NodeListOf<HTMLButtonElement>;
+  const btns = document.querySelectorAll(".btn") as NodeListOf<HTMLButtonElement>;
   if (operator) {
-    btns.forEach((btn) => btn.disabled = true);
+    btns.forEach((btn) => (btn.disabled = true));
   } else {
-    btns.forEach((btn) => btn.disabled = false);
+    btns.forEach((btn) => (btn.disabled = false));
   }
 }
