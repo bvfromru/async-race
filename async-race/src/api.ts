@@ -1,4 +1,4 @@
-import { ICar, IWinner } from "./interfaces";
+import { ICar, ICarCreate, IWinner } from "./interfaces";
 import { path, constants } from "./constants";
 
 export const getCars = async (
@@ -44,3 +44,12 @@ export const getWinners = async ({
     count: Number(response.headers.get("X-Total-Count")),
   };
 };
+
+export const createCar = async (body: ICarCreate): Promise<ICar> =>
+  (
+    await fetch(path.garage, {
+      method: "POST",
+      body: JSON.stringify(body),
+      headers: { "Content-Type": "application/json" },
+    })
+  ).json();

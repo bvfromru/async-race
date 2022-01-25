@@ -3,6 +3,7 @@ defaultGaragePage: 1,
 garagePagesLimit: 7,
 defaultWinnersPage: 1,
 winnersPagesLimit: 10,
+generateCarsLimit: 100,
 }
 
 const base = "http://127.0.0.1:3000";

@@ -1,7 +1,8 @@
-import { ICar } from "./interfaces";
-import { getCars, getWinners } from "./api";
+import { ICar, ICarCreate } from "./interfaces";
+import { getCars, getWinners, createCar } from "./api";
 import { constants } from "./constants";
 import { storage } from "./storage";
+import { carBrands, carModels } from "./carData";
 
 export async function garageUpdate(): Promise<void> {
   const carInfo = await getCars(storage.garagePage);
@@ -23,7 +24,11 @@ export async function winnersUpdate(): Promise<void> {
 export function PageButtonsUpdate(): void {
   const prevButton = document.getElementById("prev") as HTMLButtonElement;
   const nextButton = document.getElementById("next") as HTMLButtonElement;
+  const garageViewBtn = document.querySelector(".garage-menu-btn") as HTMLButtonElement;
+  const winnersViewBtn = document.querySelector(".winners-menu-btn") as HTMLButtonElement;
   if (storage.view === "garage") {
+    garageViewBtn.disabled = true;
+    winnersViewBtn.disabled = false;
     if (storage.garagePage * constants.garagePagesLimit < storage.carsCount) {
       nextButton.disabled = false;
     } else {
@@ -35,6 +40,8 @@ export function PageButtonsUpdate(): void {
       prevButton.disabled = true;
     }
   } else if (storage.view === "winners") {
+    garageViewBtn.disabled = false;
+    winnersViewBtn.disabled = true;
     if (storage.winnersPage * constants.winnersPagesLimit < storage.winnersCount) {
       nextButton.disabled = false;
     } else {
@@ -168,8 +175,8 @@ export const addListeners = function (): void {
     const garageCars = document.getElementById("garage-cars") as HTMLElement;
     const winnersView = document.getElementById("winners-view") as HTMLElement;
     const garageView = document.getElementById("garage-view") as HTMLElement;
-    const garageViewBtn = document.querySelector(".garage-menu-btn") as HTMLButtonElement;
-    const winnersViewBtn = document.querySelector(".winners-menu-btn") as HTMLButtonElement;
+    
+    const generatorBtn = document.getElementById("generator") as HTMLButtonElement;
 
     if (eventTarget.classList.contains("prev-btn")) {
       if (storage.view === "garage") {
@@ -201,20 +208,51 @@ export const addListeners = function (): void {
     if (eventTarget.classList.contains("garage-menu-btn")) {
       winnersView.style.display = "none";
       garageView.style.display = "block";
-      garageViewBtn.disabled = true;
-      winnersViewBtn.disabled = false;
       storage.view = "garage";
       PageButtonsUpdate();
     }
     if (eventTarget.classList.contains("winners-menu-btn")) {
       winnersView.style.display = "block";
       garageView.style.display = "none";
-      garageViewBtn.disabled = false;
-      winnersViewBtn.disabled = true;
       await winnersUpdate();
       winnersView.innerHTML = renderWinners();
       storage.view = "winners";
       PageButtonsUpdate();
     }
+
+    if (eventTarget.classList.contains("generator-btn")) {
+      disableButtons(true);
+      const cars = generateCars(constants.generateCarsLimit);
+      await Promise.all(cars.map(async (car) => createCar(car)));
+      await garageUpdate();
+      PageButtonsUpdate();
+      garageCars.innerHTML = renderGarage();
+      disableButtons(false);
+      PageButtonsUpdate();
+    }
   });
 };
+
+function generateCars(count: number): ICarCreate[] {
+  console.log('generate');
+  return new Array(count).fill(0).map((el) => ({ name: generateName(), color: generateColor() }));
+}
+
+function generateColor(): string {
+  return "#" + ("00000" + Math.floor(Math.random() * Math.pow(16, 6)).toString(16)).slice(-6);
+}
+
+function generateName(): string {
+  const model = carBrands[Math.floor(Math.random() * carBrands.length)];
+  const name = carModels[Math.floor(Math.random() * carModels.length)];
+  return `${model} ${name}`;
+}
+
+function disableButtons(operator: boolean): void {
+  const btns = document.querySelectorAll('.btn') as NodeListOf<HTMLButtonElement>;
+  if (operator) {
+    btns.forEach((btn) => btn.disabled = true);
+  } else {
+    btns.forEach((btn) => btn.disabled = false);
+  }
+}

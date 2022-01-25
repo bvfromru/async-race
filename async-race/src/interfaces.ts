@@ -1,3 +1,7 @@
+export interface ICarCreate {
+  name: string;
+  color: string;
+}
 export interface ICar {
   id: number;
   name: string;
